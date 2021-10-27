@@ -25,6 +25,11 @@ public:
     /** Data type (double or vector). */
     typedef typename std::conditional<IsScalar, glm::f64,
                                       glm::vec<VecDim, glm::f64, glm::defaultp>>::type VectorType;
+
+    typedef
+        typename std::conditional<IsScalar, glm::f32,
+                                  glm::vec<VecDim, glm::f32, glm::defaultp>>::type VectorTypeFloat;
+
     /** Derivative type (gradient or Jacobian). */
     typedef typename std::conditional<IsScalar, glm::vec<Dim, glm::f64, glm::defaultp>,
                                       glm::mat<VecDim, Dim, glm::f64, glm::defaultp>>::type
@@ -35,6 +40,8 @@ public:
     /** \brief Create a new field from a given inviwo volume. */
     static const Field<Dim, VecDim> createFieldFromVolume(
         std::shared_ptr<const inviwo::Volume> volume);
+
+    static std::shared_ptr<inviwo::Volume> createVolumeFromField(const Field<Dim, VecDim>& field);
 
     /**
      * \brief Create new empty field.
@@ -122,10 +129,10 @@ public:
     PositionType getCellSize() const;
 
     /** Get minimum value, component-wise. */
-    const VectorType& getMinValue() { return minValue_; }
+    const VectorType& getMinValue() const { return minValue_; }
 
     /** Get maximum value, component-wise. */
-    const VectorType& getMaxValue() { return maxValue_; }
+    const VectorType& getMaxValue() const { return maxValue_; }
 
 protected:
     /** Get the extent of the world coordinate, i.e., the maximum distance between vertices. */
@@ -191,6 +198,50 @@ const Field<Dim, VecDim> Field<Dim, VecDim>::createFieldFromVolume(
 }
 
 template <int Dim, int VecDim>
+std::shared_ptr<inviwo::Volume> Field<Dim, VecDim>::createVolumeFromField(
+    const Field<Dim, VecDim>& field) {
+
+    auto offset = field.getBBoxMin();
+    auto extent = field.getExtent();
+
+    auto dims = field.getNumVerticesPerDim();
+
+    size3_t numElements{dims[0], dims[1], Dim >= 3 ? dims[2] : 1};
+
+    auto volume = std::make_shared<inviwo::Volume>(inviwo::Volume(
+        numElements, inviwo::DataFormat<typename Field<Dim, VecDim>::VectorTypeFloat>::get()));
+    auto data = volume->getEditableRepresentation<VolumeRAM>();
+
+    int maxZ = (Dim >= 3) ? dims[2] : 1;
+    for (int x = 0; x < dims[0]; ++x)
+        for (int y = 0; y < dims[1]; ++y)
+            for (int z = 0; z < maxZ; ++z) {
+                size3_t idx{x, y, z};
+                auto value = field.sample(idx);
+                if constexpr (VecDim == 1) data->setFromDouble(idx, value);
+                if constexpr (VecDim == 2) data->setFromDVec2(idx, value);
+                if constexpr (VecDim == 3) data->setFromDVec3(idx, value);
+            }
+
+    auto mat = volume->getModelMatrix();
+    for (int d = 0; d < Dim; ++d) {
+        mat[3][d] = offset[d];
+        mat[d][d] = extent[d];
+    }
+    volume->setModelMatrix(mat);
+
+    auto maxValue = field.getMinValue();
+    auto minValue = field.getMaxValue();
+
+    if constexpr (IsScalar) {
+        volume->dataMap_.dataRange = dvec2{field.getMinValue(), field.getMaxValue()};
+        volume->dataMap_.valueRange = dvec2{field.getMinValue(), field.getMaxValue()};
+    }
+
+    return volume;
+}
+
+template <int Dim, int VecDim>
 Field<Dim, VecDim>::Field(std::shared_ptr<const inviwo::Volume> volume)
     : data_(nullptr), ownsData_(false) {
     IVW_ASSERT(volume.get(), "No valid volume.");
@@ -236,6 +287,16 @@ Field<Dim, VecDim>::Field(const typename Field<Dim, VecDim>::IndexType& size,
     for (int d = 0; d < Dim; ++d) {
         volSize[d] = size_[d];
         numElements *= size_[d];
+    }
+
+    if constexpr (IsScalar) {
+        minValue_ = std::numeric_limits<double>::max();
+        maxValue_ = std::numeric_limits<double>::lowest();
+    } else {
+        for (int d = 0; d < Dim; ++d) {
+            minValue_[d] = std::numeric_limits<double>::max();
+            maxValue_[d] = std::numeric_limits<double>::lowest();
+        }
     }
 
     // VecType* volData = new VecType[numElements];
