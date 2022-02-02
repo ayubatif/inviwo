@@ -9,6 +9,7 @@
  */
 
 #include <labtransformations/cubeanimator.h>
+#include <cmath>
 
 namespace inviwo
 {
@@ -38,6 +39,10 @@ CubeAnimator::CubeAnimator()
     // For a FloatProperty 
     // variablename(identifier, display name, init value, minvalue, maxvalue)
     , radius_("radius", "Radius", 6, 1, 8)
+    , radius_variance_("radius_variance_", "RadiusVariance", 6, 1, 8)
+    , radius_animation_("radius_animation_", "RadiusAnimation", 0, 0, static_cast<float>(2 * M_PI))
+    , rotation1_("rotation1_", "Rotation1", 0, 0, static_cast<float>(2 * M_PI))
+    , rotation2_("rotation2_", "Rotation2", 0, 0, static_cast<float>(2 * M_PI))
 {
     // Add ports
     addPort(meshIn_);
@@ -45,6 +50,10 @@ CubeAnimator::CubeAnimator()
     
     // Add properties
     addProperty(radius_);
+    addProperty(radius_variance_);
+    addProperty(radius_animation_);
+    addProperty(rotation1_);
+    addProperty(rotation2_);
 
 }
 
@@ -59,7 +68,9 @@ void CubeAnimator::process()
     auto matrix = mesh->getWorldMatrix();
 
     // Transform the mesh (TODO)
-    matrix = glm::translate(vec3(radius_.get(), 0, 0)) * matrix;
+    matrix = glm::rotate(matrix, rotation1_.get() * static_cast<float>(2 * M_PI), vec3(0, 0, 1))
+           * glm::translate(vec3(radius_.get() + radius_variance_.get()*std::sin(2*M_PI*radius_animation_.get()), 0, 0)) * matrix
+           * glm::rotate(matrix, rotation2_.get() * static_cast<float>(2 * M_PI), vec3(0, 0, 1));
 
     // Update
     mesh->setWorldMatrix(matrix);

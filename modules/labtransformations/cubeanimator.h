@@ -71,6 +71,10 @@ public:
 //Properties
 public:
     FloatProperty radius_;
+    FloatProperty radius_variance_;
+    FloatProperty radius_animation_;
+    FloatProperty rotation1_;
+    FloatProperty rotation2_;
 
 
 //Attributes
