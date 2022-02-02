@@ -69,7 +69,7 @@ void CubeAnimator::process()
 
     // Transform the mesh (TODO)
     matrix = glm::rotate(matrix, rotation1_.get() * static_cast<float>(2 * M_PI), vec3(0, 0, 1))
-           * glm::translate(vec3(radius_.get() + radius_variance_.get()*std::sin(2*M_PI*radius_animation_.get()), 0, 0)) * matrix
+           * glm::translate(vec3(1 + radius_.get() * 8 + radius_variance_.get()*std::sin(2*M_PI*radius_animation_.get()), 0, 0)) * matrix
            * glm::rotate(matrix, rotation2_.get() * static_cast<float>(2 * M_PI), vec3(0, 0, 1));
 
     // Update
