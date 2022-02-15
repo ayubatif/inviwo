@@ -9,6 +9,7 @@
  */
 
 #include <modules/labcolor/colormixing.h>
+#include <algorithm>
 
 
 namespace inviwo
@@ -62,7 +63,10 @@ vec3 ColorMixing::AdditiveColorMixing(const vec3& Color1, const vec3& Color2)
     vec3 Black(0,0,0);
     vec3 White(1,1,1);
 
-    MixedColor = White - Color1;
+    MixedColor = Color1 + Color2;
+    MixedColor.r = std::clamp(Color1.r + Color2.r, 0.0f, 1.0f);
+    MixedColor.g = std::clamp(Color1.g + Color2.g, 0.0f, 1.0f);
+    MixedColor.b = std::clamp(Color1.b + Color2.b, 0.0f, 1.0f);
 
     return MixedColor;
 }
@@ -88,7 +92,10 @@ vec3 ColorMixing::SubtractiveColorMixing(const vec3& ColorIncomingLight, const v
     vec3 Black(0,0,0);
     vec3 White(1,1,1);
 
-    MixedColor = Black + ColorSurface;
+    MixedColor = ColorSurface * ColorIncomingLight;
+    MixedColor.r = std::clamp(MixedColor.r, 0.0f, 1.0f);
+    MixedColor.g = std::clamp(MixedColor.g, 0.0f, 1.0f);
+    MixedColor.b = std::clamp(MixedColor.b, 0.0f, 1.0f);
 
     return MixedColor;
 }
