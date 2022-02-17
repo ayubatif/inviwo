@@ -31,9 +31,9 @@ ColorSpace::Rgb InterpolateInRGB(const ColorSpace::Rgb& ColorA, const ColorSpace
                                  const float t) {
     ColorSpace::Rgb InterpolatedColor;
 
-    InterpolatedColor.r = ColorA.r;
-    InterpolatedColor.g = t * ColorB.g;
-    InterpolatedColor.b = ColorA.b;
+    InterpolatedColor.r = (1.0f - t) * ColorA.r + t * ColorB.r;
+    InterpolatedColor.g = (1.0f - t) * ColorA.g + t * ColorB.g;
+    InterpolatedColor.b = (1.0f - t) * ColorA.b + t * ColorB.b;
 
     return InterpolatedColor;
 }
@@ -56,10 +56,10 @@ ColorSpace::Cmyk InterpolateInCMYK(const ColorSpace::Cmyk& ColorA, const ColorSp
                                    const float t) {
     ColorSpace::Cmyk InterpolatedColor;
 
-    InterpolatedColor.c = (1 - t) * ColorA.c;
-    InterpolatedColor.m = (1 - t) * ColorA.m;
-    InterpolatedColor.y = t * ColorB.y;
-    InterpolatedColor.k = t * ColorB.k;
+    InterpolatedColor.c = (1 - t) * ColorA.c + t * ColorB.c;
+    InterpolatedColor.m = (1 - t) * ColorA.m + t * ColorB.m;
+    InterpolatedColor.y = (1 - t) * ColorA.y + t * ColorB.y;
+    InterpolatedColor.k = (1 - t) * ColorA.k + t * ColorB.k;
 
     return InterpolatedColor;
 }
@@ -81,9 +81,9 @@ ColorSpace::Hsv InterpolateInHSV(const ColorSpace::Hsv& ColorA, const ColorSpace
                                  const float t) {
     ColorSpace::Hsv InterpolatedColor;
 
-    InterpolatedColor.h = 5 * t * ColorB.h;
-    InterpolatedColor.s = ColorA.s + ColorB.s;
-    InterpolatedColor.v = ColorA.v + ColorB.v;
+    InterpolatedColor.h = (1 - t) * ColorA.h + t * ColorB.h;
+    InterpolatedColor.s = (1 - t) * ColorA.s + t * ColorB.s;
+    InterpolatedColor.v = (1 - t) * ColorA.v + t * ColorB.v;
 
     return InterpolatedColor;
 }
@@ -108,9 +108,9 @@ ColorSpace::Hsv ChangeValueAndSaturation(const ColorSpace::Hsv& Color, const flo
                                          const float tSaturation) {
     ColorSpace::Hsv ChangedColor;
 
-    ChangedColor.h = 220.0;
-    ChangedColor.s = 1.0;
-    ChangedColor.v = 0.9;
+    ChangedColor.h = Color.h;
+    ChangedColor.s = tSaturation;
+    ChangedColor.v = tValue;
 
     return ChangedColor;
 }
@@ -135,9 +135,9 @@ ColorSpace::Hsv ChangeHueAndSaturation(const ColorSpace::Hsv& Color, const float
                                        const float tSaturation) {
     ColorSpace::Hsv ChangedColor;
 
-    ChangedColor.h = 180.0;
-    ChangedColor.s = 1.0;
-    ChangedColor.v = 0.5;
+    ChangedColor.h = tHue * 360;
+    ChangedColor.s = tSaturation;
+    ChangedColor.v = Color.v;
 
     return ChangedColor;
 }
