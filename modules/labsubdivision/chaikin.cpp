@@ -42,6 +42,7 @@ Chaikin::Chaikin()
     addProperty(propMinNumDesiredPoints);
 }
 
+
 /*  Applies Chaikin's Corner Cutting algorithm.
 
     ControlPolygon is an array of points defining the line segments to be subdivided.
@@ -57,18 +58,24 @@ void Chaikin::CornerCutting(const std::vector<vec3>& ControlPolygon,
 
     const size_t NumPointsPerPolygonLeg = 1 + MinNumDesiredPoints / ControlPolygon.size();
     Curve.reserve(NumPointsPerPolygonLeg * ControlPolygon.size());
-    for(size_t i(0);i<ControlPolygon.size();i++)
-    {
-        const vec3& LeftPoint = ControlPolygon[i];
-        const vec3& RightPoint = ControlPolygon[(i+1) % ControlPolygon.size()];
 
-        //Linearly interpolate between left and right point in the t-interval [0,1)
-        for(size_t j(0);j<NumPointsPerPolygonLeg;j++)
-        {
-            const float t = float(j) / float(NumPointsPerPolygonLeg); //Gives values from 0 to almost 1
-            Curve.push_back((1-t) * LeftPoint + t * RightPoint);
-        }
+    std::vector<vec3> IntermediatePolygon; 
+    for (size_t i(0); i < ControlPolygon.size(); i++) {
+        IntermediatePolygon.push_back(ControlPolygon[i]);
     }
+    while (Curve.size() < MinNumDesiredPoints) {
+        Curve.clear();
+        for (size_t i(0); i < IntermediatePolygon.size(); i++) {
+            const vec3& LeftPoint = IntermediatePolygon[i];
+            const vec3& RightPoint = IntermediatePolygon[(i + 1) % IntermediatePolygon.size()];
+
+            Curve.push_back(0.75 * LeftPoint + 0.25 * RightPoint);
+            Curve.push_back(0.25 * LeftPoint + 0.75 * RightPoint);
+
+        }
+        IntermediatePolygon = Curve;
+    }
+
 }
 
 void Chaikin::process()
