@@ -9,6 +9,7 @@
  */
 
 #include <modules/labsubdivision/chaikin.h>
+#include <algorithm>
 
 namespace inviwo
 {
@@ -42,6 +43,19 @@ Chaikin::Chaikin()
     addProperty(propMinNumDesiredPoints);
 }
 
+int colinear(const vec3& p1, const vec3& p2, const vec3& p3) { 
+    auto distance1 = glm::distance(p1, p2);
+    auto distance2 = glm::distance(p2, p3);
+    auto distance3 = glm::distance(p3, p1);
+    auto max = std::max(distance1, std::max(distance2, distance3));
+    if (max == distance1) {
+        return max == distance2 + distance3;
+    } else if (max == distance2) {
+        return max == distance1 + distance3;
+    }
+    return max == distance1 + distance2;
+}
+
 
 /*  Applies Chaikin's Corner Cutting algorithm.
 
@@ -65,13 +79,23 @@ void Chaikin::CornerCutting(const std::vector<vec3>& ControlPolygon,
     }
     while (Curve.size() < MinNumDesiredPoints) {
         Curve.clear();
-        for (size_t i(0); i < IntermediatePolygon.size(); i++) {
+        size_t i(0);
+        while(i < IntermediatePolygon.size()) {
             const vec3& LeftPoint = IntermediatePolygon[i];
             const vec3& RightPoint = IntermediatePolygon[(i + 1) % IntermediatePolygon.size()];
+            const vec3& RightestPoint = IntermediatePolygon[(i + 2) % IntermediatePolygon.size()];
+
+            if (colinear(LeftPoint, RightPoint, RightestPoint)) {
+                Curve.push_back(LeftPoint);
+                //Curve.push_back(RightPoint);
+                Curve.push_back(RightestPoint);
+                i+=2;
+                continue;
+            }
 
             Curve.push_back(0.75 * LeftPoint + 0.25 * RightPoint);
             Curve.push_back(0.25 * LeftPoint + 0.75 * RightPoint);
-
+            i++;
         }
         IntermediatePolygon = Curve;
     }
