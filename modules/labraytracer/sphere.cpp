@@ -18,6 +18,23 @@ Sphere::Sphere(const vec3& center, const double& radius) {
     radius_ = radius;
 }
 
+ /*
+ * solve the quadratic formula for lambda
+ */
+double hit_sphere(const vec3& center, double radius, const Ray& r) {
+    vec3 prc = r.getOrigin() - center;
+    auto a = dot(r.getDirection(), r.getDirection());
+    auto b = 2.0 * dot(prc, r.getDirection());
+    auto c = dot(prc, prc) - radius * radius;
+    auto discriminant = b * b - 4 * a * c;
+    if (discriminant < 0) {
+        return -1.0;
+    } else {
+        return (-b - sqrt(discriminant)) / (2.0 * a);
+    }
+};
+
+
 bool Sphere::closestIntersection(const Ray& ray, double maxLambda,
                                  RayIntersection& intersection) const {
     // Programming TASK 1: implement this method
@@ -36,6 +53,18 @@ bool Sphere::closestIntersection(const Ray& ray, double maxLambda,
     // Ray direction t_r : ray.getDirection()
     // If you need the intersection point, use ray.pointOnRay(lambda)
     // You can ignore the uvw (texture coordinates)
+
+    double lambda = hit_sphere(this->center_, this->radius_, ray);
+    
+    bool rayIntersectsSphere = (lambda > 0) && (lambda <= maxLambda);
+    if (rayIntersectsSphere) {
+        vec3 uwu = vec3(0, 0, 0);
+        vec3 p = ray.pointOnRay(lambda);
+        vec3 normalVec = p - vec3(0, 0, -1);
+
+        intersection = RayIntersection(ray, shared_from_this(), lambda, normalVec, uwu);
+        return true;
+    }
 
     return false;
 }

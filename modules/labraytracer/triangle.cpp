@@ -26,6 +26,11 @@ Triangle::Triangle(const vec3& v0, const vec3& v1, const vec3& v2, const vec3& u
     mUVW[2] = uvw2;
 }
 
+vec3 normalize(vec3 vec) {
+    double magnitude = sqrt(dot(vec, vec));
+    return vec3(vec.x / magnitude, vec.y / magnitude, vec.z / magnitude);
+}
+
 bool Triangle::closestIntersection(const Ray& ray, double maxLambda,
                                    RayIntersection& intersection) const {
     // Programming TASK 1: Implement this method
@@ -42,6 +47,41 @@ bool Triangle::closestIntersection(const Ray& ray, double maxLambda,
     // Ray origin p_r : ray.getOrigin()
     // Ray direction t_r : ray.getDirection()
     // Compute the intersection point using ray.pointOnRay(lambda)
+
+    vec3 v0, v1, v2;
+    v0 = mVertices[0];
+    v1 = mVertices[1];
+    v2 = mVertices[2];
+
+    vec3 t1 = v1 - v0;
+    vec3 t2 = v2 - v0;
+
+    vec3 normal = normalize(cross(t1, t2));
+    vec3 tr = ray.getDirection();
+
+    double lambda, lambda1, lambda2;
+    lambda = lambda1 = lambda2 = -1;
+
+    float denom = dot(tr, normal);
+    if (denom > 0) {
+        vec3 pr = ray.getOrigin();
+        vec3 vpr = v0 - pr;
+        lambda = dot(vpr, normal) / denom;
+    }
+
+    //bool b1 = lambda1 > 0 && lambda2 > 0;
+    //bool b2 = lambda1 < 1 && lambda2 <= 1 * maxLambda;
+    //bool b3 = lambda1 + lambda2 <= 1 * maxLambda;
+
+    //bool rayIntersectsTriangle = b1 && b2 && b3;
+    bool rayIntersectsPlane = (lambda >= 0) && (lambda = maxLambda);
+    if (rayIntersectsPlane) {
+        vec3 uwu = vec3(0, 0, 0);
+        vec3 p = ray.pointOnRay(lambda);
+
+        intersection = RayIntersection(ray, shared_from_this(), lambda, normal, uwu);
+        return true;
+    }
 
     return false;
 }
