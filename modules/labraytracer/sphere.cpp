@@ -21,18 +21,6 @@ Sphere::Sphere(const vec3& center, const double& radius) {
     radius_ = radius;
 }
 
-//vec3 ray_color(const Ray& r) {
-//    auto t = hit_sphere(vec3(0, 0, -1), 0.5, r);
-//    if (t > 0.0) {
-//        vec3 N = (r.pointOnRay(t) - vec3(0, 0, -1));
-//        N *= 1/N->length;
-//        return 0.5 * color(N.x() + 1, N.y() + 1, N.z() + 1);
-//    }
-//    vec3 unit_direction = unit_vector(r.direction());
-//    t = 0.5 * (unit_direction.y() + 1.0);
-//    return (1.0 - t) * color(1.0, 1.0, 1.0) + t * color(0.5, 0.7, 1.0);
-//}
-
 bool Sphere::closestIntersection(const Ray& ray, double maxLambda,
                                  RayIntersection& intersection) const {
     // Programming TASK 1: implement this method
@@ -67,7 +55,7 @@ bool Sphere::closestIntersection(const Ray& ray, double maxLambda,
     if(rayIntersectsSphere)
     {
         vec3 p = ray.pointOnRay(lambda);
-        vec3 normalVec = p - vec3(0, 0, -1);
+        vec3 normalVec = normalize(p - center_);
         vec3 uvw = vec3();
 
         intersection = RayIntersection(ray, shared_from_this(), lambda, normalVec, uvw);
