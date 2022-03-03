@@ -11,6 +11,9 @@
 #include <labraytracer/sphere.h>
 #include <labraytracer/util.h>
 
+#define yes true
+#define no false
+
 namespace inviwo {
 
 Sphere::Sphere(const vec3& center, const double& radius) {
@@ -18,34 +21,10 @@ Sphere::Sphere(const vec3& center, const double& radius) {
     radius_ = radius;
 }
 
- /*
- * solve the quadratic formula for lambda
- */
-double hit_sphere(const vec3& center, double radius, const Ray& r) {
-    vec3 prc = r.getOrigin() - center;
-    auto a = dot(r.getDirection(), r.getDirection());
-    auto b = 2.0 * dot(prc, r.getDirection());
-    auto c = dot(prc, prc) - radius * radius;
-    auto discriminant = b * b - 4 * a * c;
-    if (discriminant < 0) {
-        return -1.0;
-    } else {
-        return (-b - sqrt(discriminant)) / (2.0 * a);
-    }
-};
-
-
 bool Sphere::closestIntersection(const Ray& ray, double maxLambda,
                                  RayIntersection& intersection) const {
     // Programming TASK 1: implement this method
     // Your code should compute the intersection between a ray and a sphere;
-
-    // If you detect an intersection, the return type should look similar to this:
-    // if(rayIntersectsSphere)
-    //{
-    //  intersection = RayIntersection(ray,shared_from_this(),lambda,normalVec,uvw);
-    //  return true;
-    //}
     //
     // Hints:
     // lambda is the distance form the ray origin an the intersection point.
@@ -54,19 +33,35 @@ bool Sphere::closestIntersection(const Ray& ray, double maxLambda,
     // If you need the intersection point, use ray.pointOnRay(lambda)
     // You can ignore the uvw (texture coordinates)
 
-    double lambda = hit_sphere(this->center_, this->radius_, ray);
-    
-    bool rayIntersectsSphere = (lambda > 0) && (lambda <= maxLambda);
-    if (rayIntersectsSphere) {
-        vec3 uwu = vec3(0, 0, 0);
-        vec3 p = ray.pointOnRay(lambda);
-        vec3 normalVec = p - vec3(0, 0, -1);
+    vec3 p_r = ray.getOrigin();
+    vec3 t_r = ray.getDirection();
 
-        intersection = RayIntersection(ray, shared_from_this(), lambda, normalVec, uwu);
-        return true;
+    vec3 r_c = p_r - center_;  // ray -> circle vector
+    double a = dot(t_r, t_r);  // = ||t_r||^2
+    double b = 2.0 * dot(r_c, t_r);
+    double c = dot(r_c, r_c) - radius_ * radius_;
+    double discriminant = b * b - 4 * a * c;
+
+    double lambda;
+    if (discriminant < 0) {
+        lambda = -1.0;
+    } else {
+        lambda = (-b - sqrt(discriminant)) / (2.0 * a);
     }
 
-    return false;
+    bool rayIntersectsSphere = (0 < lambda) && (lambda <= maxLambda);
+
+    // If you detect an intersection, the return type should look similar to this:
+    if (rayIntersectsSphere) {
+        vec3 p = ray.pointOnRay(lambda);
+        vec3 normalVec = normalize(p - center_);
+        vec3 uvw = vec3();
+
+        intersection = RayIntersection(ray, shared_from_this(), lambda, normalVec, uvw);
+        return yes;
+    }
+
+    return no;
 }
 
 bool Sphere::anyIntersection(const Ray& ray, double maxLambda) const {
