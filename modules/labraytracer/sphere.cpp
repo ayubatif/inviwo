@@ -49,7 +49,7 @@ bool Sphere::closestIntersection(const Ray& ray, double maxLambda,
         lambda = (-b - sqrt(discriminant)) / (2.0 * a);
     }
 
-    bool rayIntersectsSphere = (0 < lambda) && (lambda <= maxLambda);
+    bool rayIntersectsSphere = (0 <= lambda) && (lambda <= maxLambda);
 
     // If you detect an intersection, the return type should look similar to this:
     if (rayIntersectsSphere) {
